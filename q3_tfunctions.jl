@@ -7,7 +7,7 @@ tf1(x:: Float64) = -(x - 0.25)^2 + 1
 
 
 """
-
+Sin wave with upward trend
 True argmax - 0.787398
 """
 tf2(x:: Float64) = sin(10 * x) + 0.2 * x
