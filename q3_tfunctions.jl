@@ -1,0 +1,78 @@
+
+"""
+Simple unimodal square function
+True argmax - 0.25
+"""
+tf1(x:: Float64) = -(x - 0.25)^2 + 1 
+
+
+"""
+
+True argmax - 0.787398
+"""
+tf2(x:: Float64) = sin(10 * x) + 0.2 * x
+
+
+"""
+Narrow guassian peak
+True argmax - 0.7
+"""
+tf3(x:: Float64) = exp(-10000 * (x - 0.7)^2)
+
+
+"""
+2 Guassian peaks at different heights
+True argmax - 0.487902
+"""
+tf4(x:: Float64) = exp(-50 * (x - 0.5)^2) + 0.8 * exp(-10 * (x - 0.075)^2)
+
+
+"""
+Non continuous abs function with negative peak
+True argmax - 0.7
+"""
+tf5(x:: Float64) = -abs(x - 0.7) - 1
+
+
+"""
+Linear function with max at corner
+True argmax = 1.0
+"""
+tf6(x:: Float64) = x
+
+
+"""
+Guassian peak with sin bumps
+True argmax - 0.501267
+"""
+tf7(x:: Float64) = exp(-10000 * (x - 0.5)^2) + 0.5 * sin(50 * x)
+
+
+"""
+Z modified so differnece in peaks is even smaller - can vary the denominator of x/10000 to see how it impacts grid search
+True argmax = 0.90005
+"""
+tf8(x:: Float64) = exp(-(10 * x - 1)^2) + exp(-(10 * x - 5)^2) + exp(-(10 * x - 9)^2) + x/10000
+
+
+"""
+Sin wave with guassian noise in middle and upward trend
+True argmax = 0.518362
+"""
+tf9(x::Float64) = sin(100x) * exp(-0.5(x - 0.5)^2) + 0.01x
+
+
+"""
+Function generator for testing robustness to small peaks
+Denominator is adjustabel parameter -> as increases max peak should get harder to detect
+Bounds: 0 < x1 < 0.5 & 0.5 < x2 < 1
+True argmax = x2 (default pi/5)
+"""
+function make_test_func(denom::Int; x1=pi/10, x2=pi/5, k=5000.0)
+    function test_func(x::Float64)
+        peak1 = exp(-k * (x - x1)^2)
+        peak2 = (1 + 1/denom) * exp(-k * (x - x2)^2)
+        return peak1 + peak2
+    end
+    return test_func
+end

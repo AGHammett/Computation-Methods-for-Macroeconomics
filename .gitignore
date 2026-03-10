@@ -1,0 +1,14 @@
+*.jl.cov
+*.jl.mem
+*.ji
+*.so
+*.dylib
+*.dll
+*.exe
+*.log
+
+Manifest.toml
+JuliaManifest.toml
+
+.vscode
+.DS_Store
