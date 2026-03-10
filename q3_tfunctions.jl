@@ -1,4 +1,3 @@
-
 """
 Simple unimodal square function
 True argmax - 0.25
@@ -59,7 +58,7 @@ tf8(x:: Float64) = exp(-(10 * x - 1)^2) + exp(-(10 * x - 5)^2) + exp(-(10 * x - 
 Sin wave with guassian noise in middle and upward trend
 True argmax = 0.518362
 """
-tf9(x::Float64) = sin(100x) * exp(-0.5(x - 0.5)^2) + 0.01x
+tf9(x:: Float64) = sin(100x) * exp(-0.5(x - 0.5)^2) + 0.01x
 
 
 """
@@ -68,11 +67,26 @@ Denominator is adjustabel parameter -> as increases max peak should get harder t
 Bounds: 0 < x1 < 0.5 & 0.5 < x2 < 1
 True argmax = x2 (default pi/5)
 """
-function make_test_func(denom::Int; x1=pi/10, x2=pi/5, k=5000.0)
-    function test_func(x::Float64)
+function make_test_func(denom:: Int; x1=pi/10, x2=pi/5, k=5000.0)
+    function test_func(x:: Float64)
         peak1 = exp(-k * (x - x1)^2)
         peak2 = (1 + 1/denom) * exp(-k * (x - x2)^2)
         return peak1 + peak2
     end
     return test_func
+end
+
+"""
+Function to generate 2 random points for x1 and x2 in the test_func. Allows robustness of placement of peaks
+"""
+function gen_random_points(; min_distance:: Float64 = 0.1)
+
+    while True
+
+        x1, x2 = sort(rand(2)) # sort ensures x1 is always smaller
+
+        if x2 - x1 >= min_distance # implement the min distance to prevent peak inteference
+            return x1, x2 # x1 < x2
+        end
+    end
 end

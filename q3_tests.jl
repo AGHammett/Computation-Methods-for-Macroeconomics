@@ -125,36 +125,63 @@ function test_ngrid_accuracy(;tolerance = 1.0e-3)
     end
 
     return failed_b, failed_g
-
 end
 
-function test_close_peaks(;tolerance = 1.0e-3)
+function test_close_peaks(;tolerance = 1.0e-3, difficulty_scaler:: Real = 10, grid_scaler:: Real = 2, random_points::Int = 0)
 
     denominator = 10
-    grid_points = 100
+    grid_points = 10 # note grid points never resets after successful test - harder tests will required at least as many
     denoms = Int[]
     succ_grid_points = Int[]
 
     while denominator < 1.01e8
-
         println("Testing $denominator")
 
-        f = make_test_func(denominator, k=2e5)
+        success = false
 
-        while grid_points < 1e8
+        # Repeat until current denominator passes
+        while !success && grid_points < 1e8
 
-            result = global_solution(f, grid_points = grid_points)
+            # randomise the points being tested against - more robust
+            if random_points > 0
+                random_fails = 0
 
-            if abs(Optim.minimizer(result) - (pi / 5)) > tolerance
-                grid_points *= 2
+                for i in 1:random_points
+                    x1, x2 = gen_random_points()
+                    f = make_test_func(denominator, x1=x1, x2=x2)
+                    target = x2
+                    result = global_solution(f, grid_points=grid_points)
+
+                    if abs(Optim.minimizer(result) - target) > tolerance
+                        random_fails += 1 
+                        # double grid points and restart the test for all sets of points
+                        grid_points *= grid_scaler
+                        break
+                    end
+                end
+
+                success = (random_fails == 0)
+
+            # use default peaks in test function
             else
-                push!(denoms, denominator)
-                push!(succ_grid_points, grid_points)
-                break
-            end
-        end
+                f = make_test_func(denominator, k=2e5)
+                target = pi / 5
+                result = global_solution(f, grid_points=grid_points)
 
-        denominator *= 10
+                if abs(Optim.minimizer(result) - target) <= tolerance
+                    success = true
+                else
+                    grid_points *= grid_scaler
+                end
+            end
+        end  # ends while !success when success become true to move onto next difficult
+
+        # Record result
+        push!(denoms, denominator)
+        push!(succ_grid_points, grid_points)
+
+        # Move to next difficulty
+        denominator *= difficulty_scaler
     end
     return denoms, succ_grid_points
 end
