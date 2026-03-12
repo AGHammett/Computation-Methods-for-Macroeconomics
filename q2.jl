@@ -4,7 +4,7 @@ U(c:: Real, gamma:: Real) = (c ^ (1 - gamma)) / (1 - gamma)
 
 V(h:: Real, sigma:: Real, T::Real) = ((T - h) ^ (1 - 1 / sigma)) / (1 - 1 / sigma)
 
-W(h:: Real, x:: Real, epsilon:: Real, alpha:: Real) = alpha * (1 + max(0, h - x)) ^ epsilon
+W(h:: Real, x:: Real, epsilon:: Real, alpha:: Real) = alpha * ((1 + max(0, h - x)) ^ epsilon - 1)
 
 con(w:: Real, h::Real, a::Real) = w * h + a 
 
@@ -24,11 +24,13 @@ function plot_utility_variation(;
     h_grid = range(0, 12, length = 500)
 )
 
-    plt = plot(
+    p = plot(
         xlabel = "Hours worked (h)",
         ylabel = "Utility",
-        title = "Utility as function of hours worked"
-    )
+        title = "Utility as function of hours worked")
+    
+    Z_base = [Z(w, h, a, gamma, sigma, T, x, epsilon, 0.0) for h in h_grid]
+    #plot!(p, h_grid, Z_base, label = "alpha = 0.0", linestyle = :dash, linewidth = 1, linecolor = "blue")
 
     for v in values
 
@@ -57,8 +59,8 @@ function plot_utility_variation(;
 
         Z_vals = [Z(w_i, h, a_i, g_i, s_i, T_i, x_i, e_i, A_i) for h in h_grid]
 
-        plot!(plt, h_grid, Z_vals, label = "$(param) = $(v)")
+        plot!(p, h_grid, Z_vals, label = "$(param) = $(v)")
     end
 
-    display(plt)
+    display(p)
 end
