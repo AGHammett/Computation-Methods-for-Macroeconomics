@@ -9,7 +9,7 @@ using Optim
 Z function as defined by assignment. Used to pass in as an argument to optimsiation or graphing functions
 functional approach will allow for other functions with the same signature to be passed into the functions below
 """
-function Z3(h :: Float64):: Float64
+function Z(h :: Float64):: Float64
 
     return exp(-(10 * h - 1)^2) + exp(-(10 * h - 5)^2) + exp(-(10 * h - 9)^2) + h/100
 
@@ -58,7 +58,6 @@ function optimise_basic(f:: Function, lower_bound:: Float64, upper_bound:: Float
 
     # optim optimisation can only minimise so we use the negative of the function to obtain a maximum
     result = optimize(x -> -f(x), lower_bound, upper_bound)  #Note optim usese a Z not S!!!
-
     h_star = Optim.minimizer(result)
     y_star = -Optim.minimum(result) # since we use the negative of the function we have to negative y_star
     
@@ -84,7 +83,7 @@ function find_three_peaks(f:: Function)
         println("H*: $h_star")
         println("Y*: $y_star")
 
-        push!(result, result)
+        push!(results, result)
         push!(h_stars, h_star)
         push!(y_stars, y_star)
     end
@@ -115,6 +114,7 @@ function q3_b(f:: Function, M:: Int)
      h_m_array = [h(f, m) for m in m_range] # f can be any function that satisfies h
 
     p = plot(m_range, h_m_array, label = "h(m)") 
+    hline!(p, [0.90005])
     display(p)
     return p
 
@@ -144,3 +144,5 @@ function global_solution(f:: Function ; grid_points::Int = 1000,  search_method 
     return result
 
 end
+
+#local points methods

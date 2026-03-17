@@ -12,26 +12,33 @@ const TESTS = (
     (name = "tf5", f = tf5, target = 0.7),
     (name = "tf6", f = tf6, target = 1.0),
     (name = "tf7", f = tf7, target = 0.501267),
-    (name = "tf8", f = tf8, target = 0.90005),
+    (name = "tf8", f = tf8, target = 0.9000005),
     (name = "tf9", f = tf9, target = 0.518362),
+    (name = "tf10", f = tf10, target = 0.4),
+    (name = "tf11", f = tf11, target = 0.8),
+    (name = "tf12", f = tf12, target = 0.5),
     (name = "Z",   f = Z,   target = 0.90005))
 
-function plot_test_functions()
 
-    plot_function(tf1, tf2, tf3, tf4, tf5, tf6, tf7, tf8, tf9, grid_points = 1000)
-
-end
-
-function test_optimisation(grid_points::Int = 1000)
+function test_optimisation(grid_points::Int = 1000; verbose::Bool = false, tolerance = 1e-6)
 
     for (i, (name, f, target)) in enumerate(TESTS)
 
         println("Testing $name")
         result_b = global_solution(f, grid_points = grid_points)
         result_g = global_solution(f, grid_points = grid_points, search_method = GoldenSection())
-        println("Golden Section Difference: ", abs(Optim.minimizer(result_b) - target)) 
-        println("Golden Section Difference: ", abs(Optim.minimizer(result_g) - target)) 
 
+        b_diff = abs(Optim.minimizer(result_b) - target)
+        g_diff = abs(Optim.minimizer(result_g) - target)
+        
+        if b_diff > tolerance || g_diff > tolerance
+            println("Failed function ", name)
+        end
+        
+        if verbose == true # verbose function will display exact difference
+            println("Brent Difference: ", b_diff) 
+            println("Golden Section Difference: ", g_diff) 
+        end
     end
 
 end
@@ -92,9 +99,17 @@ function test_function_times()
     end
 end
 
+"""
+function that starts at a grid of 1000 and decreases resolution to see when optimisation fails 
+    to find the global maximum. 
+Test using both Brent and GoldenSearch for completion but it is technically redunadnat as failure
+    arises due to grid inaccuracy -> this shows both methods give the same result
+"""
 function test_ngrid_accuracy(;tolerance = 1.0e-3)
 
     grid_points = 1000 # start at 1000 since I know this passes all tests
+
+    # setup dictionaries for failed tests
     failed_b = Dict{String, Int}()
     failed_g = Dict{String, Int}()
     
@@ -102,17 +117,19 @@ function test_ngrid_accuracy(;tolerance = 1.0e-3)
         
         for (name, f, target) in TESTS
             
-            haskey(failed_b, name) && haskey(failed_g, name) && continue
-
-            result_b = global_solution(f, grid_points = grid_points)
-            result_g = global_solution(f, grid_points = grid_points, search_method = GoldenSection())
-
-            if abs(Optim.minimizer(result_b) - target) > tolerance
-                failed_b[name] = grid_points
+            # while the test isn't part of the failed dictionary try it. if not it will skip
+            if !haskey(failed_b, name)
+                result_b = global_solution(f, grid_points = grid_points)
+                if abs(Optim.minimizer(result_b) - target) > tolerance # only add once out of tolerance
+                    failed_b[name] = grid_points
+                end
             end
-
-            if abs(Optim.minimizer(result_g) - target) > tolerance
-                failed_g[name] = grid_points
+            #same logic but for goldensearch
+            if !haskey(failed_g, name)
+                result_g = global_solution(f, grid_points = grid_points, search_method = GoldenSection())
+                if abs(Optim.minimizer(result_g) - target) > tolerance
+                    failed_g[name] = grid_points
+                end
             end
 
         end
@@ -123,8 +140,26 @@ function test_ngrid_accuracy(;tolerance = 1.0e-3)
             break
         end
     end
+    
+    # print resutls
+    println("Brent Method:")
+    
+    if isempty(failed_b)
+        println("  All functions passed down to grid_points = $grid_points")
+    else
+        for (name, gp) in failed_b
+            println("  $name first failed at grid_points = $gp")
+        end
+    end
 
-    return failed_b, failed_g
+    println("\nGolden Section Method:")
+    if isempty(failed_g)
+        println("  All functions passed down to grid_points = $grid_points")
+    else
+        for (name, gp) in failed_g
+            println("  $name first failed at grid_points = $gp")
+        end
+    end
 end
 
 function test_close_peaks(;tolerance = 1.0e-3, difficulty_scaler:: Real = 10, grid_scaler:: Real = 2, k = 5000.0,  random_tests::Int = 0)

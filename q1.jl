@@ -14,7 +14,7 @@ function Z1(h::Float64 ; w::Real = 2, gamma:: Real = 3, sigma:: Real = 0.5, a:: 
 
 end
 
-function plot_function(f:: Function; p_range:: Tuple{Real, Real} = (0, 0.9), grid_points:: Int = 100)
+function plot_function(f:: Function; p_range:: Tuple{Real, Real} = (0.0, 0.9), grid_points:: Int = 100)
 
     grid = range(p_range[1], p_range[2], grid_points)
     
@@ -26,21 +26,20 @@ end
 
 function optimise_Z(;w::Real = 2, gamma:: Real = 3, sigma:: Real = 0.5, a:: Real = 0.5)
 
-    result = optimize(h -> -Z1(h, w = w, gamma = gamma, sigma = sigma, a = a), 0.0, 0.9)
+    result = optimize(h -> -Z1(h; w = w, gamma = gamma, sigma = sigma, a = a), 0.0, 0.9)
     return Optim.minimizer(result)
 end
 
-function find_a_min(f::Function, grid_end:: Real, grid_size:: Int)
+function find_a_min(grid_end:: Real, grid_size:: Int; tolerance = 1e-4)
 
     a_grid = range(0, grid_end, grid_size)
 
-    # apply function over grid and absolute to retrieve closes to 0 as min
-    min_index = argmin(abs.(f.(a_grid)))
-    left_index = max(1, min_index - 1)
-    right_index = min(grid_size, min_index + 1)
-
-    result = find_zero(f, (a_grid[left_index], a_grid[right_index]))
-
-    return result
+    for a in a_grid
+        h = optimise_Z(a = a)
+        if h < tolerance
+            a_estimate = a
+            break
+        end
+    end
 
 end
