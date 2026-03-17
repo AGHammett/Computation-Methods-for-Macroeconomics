@@ -3,13 +3,13 @@ using Plots
 using Optim
 
 
-###note optim's default method is Nelder-Mead
+# note optim's default method is Nelder-Mead
 
 """
 Z function as defined by assignment. Used to pass in as an argument to optimsiation or graphing functions
 functional approach will allow for other functions with the same signature to be passed into the functions below
 """
-function Z(h :: Float64):: Float64
+function Z3(h :: Float64):: Float64
 
     return exp(-(10 * h - 1)^2) + exp(-(10 * h - 5)^2) + exp(-(10 * h - 9)^2) + h/100
 
