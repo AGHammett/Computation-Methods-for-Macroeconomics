@@ -23,7 +23,7 @@ function plot_function(f:: Function; grid_points:: Int = 100)
 
 
     # default of 100 points shows most functions smoothly - increase for better resolution with more detailed functions
-    grid = range(0, 1, grid_points)
+    grid = range(0, 1, length = grid_points) # note range returns a range type NOT an array -> more memory effecient for looping & grids
 
     p = plot(grid, f.(grid), label = "Func")
     display(p)
@@ -37,7 +37,7 @@ Uses multiple dispatch
 """
 function plot_function(fs:: Function... ; grid_points:: Int = 100)
 
-    grid = range(0, 1, grid_points)
+    grid = range(0, 1, length = grid_points)
 
     p = plot()
     for (i, f) in enumerate(fs)
@@ -100,7 +100,7 @@ end
 function h(f:: Function, m:: Int):: Float64
 
     #create an array with grid points
-    grid = collect(range(0.0, 1.0 , m))
+    grid = range(0.0, 1.0 , length =  m)
     outputs = f.(grid) # make use of Julia's function broadcasting to avoid looping.
 
     max_index = argmax(outputs)
@@ -120,15 +120,21 @@ function q3_b(f:: Function, M:: Int)
 
 end
 
+# here I'm creating a new data type so use in the dispatch of the global_solution function to determine which algorithm it uses 
+abstract type GlobalSolutionAlgorithm end # abstract type determines the class of the type but can't be instantiated
+struct GridSearch <: GlobalSolutionAlgorithm end # <: inherits the type - no data assigned here so no memory needed
+struct PeakSearch <: GlobalSolutionAlgorithm end
+
+
 """
 Global optimiser 1 - using a grid search follow by a search method
 f is one dimensional and over the domain [0, 1]
 search_method - can take either Brent() or GoldenSection() 
 """
-function global_solution(f:: Function ; grid_points::Int = 1000,  search_method = Brent()) # note kwargs allow flexibility
+function global_solution(::GridSearch, f:: Function ; grid_points:: Int = 1000,  search_method = Brent()) # note kwargs allow flexibility
 
     # step 1 - grid search to identift potential maxima -> h can be reused here
-    grid = collect(range(0.0, 1.0 , grid_points))
+    grid = (range(0.0, 1.0 , length =  grid_points))
     # step 2 - broadcast the function over the grid to get output at each point
     outputs = f.(grid)
     #step 3 - grab position of max point
@@ -146,3 +152,37 @@ function global_solution(f:: Function ; grid_points::Int = 1000,  search_method 
 end
 
 #local points methods
+
+function find_peaks(f::Function; grid_points::Int = 1000, search_method = Brent())
+    grid = range(0.0, 1.0, length=grid_points)
+    outputs = f.(grid)
+
+    peak_indices = Int[] # generate container for maxima
+    
+    for i in 2:grid_points-1 # not loop starts and ends 1 away form the edges or we'd have index errors
+        if outputs[i] > outputs[i - 1] && outputs[i] > outputs[i + 1] # points which are greater than the adjacent ones
+            push!(peak_indices, i) # add the index not the point
+        end
+    end
+    
+    # if no peaks we have a unimodal function so it can be handled directly
+    if isempty(peak_indices)
+        results = [optimize(x -> -f(x), 0.0, 1.0, search_method)] # needs to be a vector for consistent outputs
+    else # otherwise use otim to find all peaks around the indices it's given
+        results = [optimize(x -> -f(x), grid[i - 1], grid[i + 1], search_method) for i in peak_indices]
+    end
+
+    return results
+end
+
+function global_solution(::PeakSearch, f:: Function ; grid_points:: Int = 1000,  search_method = Brent())
+    results = find_peaks(f; grid_points = grid_points, search_method = search_method)
+
+    results_minimums = Optim.minimum.(results)
+    return results[argmin(results_minimums)]
+end
+
+# default dispatch of global_solution when tag is excluded
+function global_solution(f:: Function ; grid_points:: Int = 1000,  search_method = Brent())
+    return global_solution(GridSearch(), f ; grid_points = grid_points, search_method = search_method)
+end
