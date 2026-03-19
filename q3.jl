@@ -127,9 +127,14 @@ struct PeakSearch <: GlobalSolutionAlgorithm end
 
 
 """
-Global optimiser 1 - using a grid search follow by a search method
-f is one dimensional and over the domain [0, 1]
+Global optimiser with GridSearch
+Uses a grid search follow by an Optim search method
+
+f - one dimensional and over the domain [0, 1]
+grid_point - int determining density of grid. Higher denisty -> greater accuracy but more expensive
 search_method - can take either Brent() or GoldenSection() 
+
+returns an Optim.optimizer struct
 """
 function global_solution(::GridSearch, f:: Function ; grid_points:: Int = 1000,  search_method = Brent()) # note kwargs allow flexibility
 
@@ -153,6 +158,11 @@ end
 
 #local points methods
 
+"""
+Function to find all maximums of a function over the domain [0,1] as long as they don't plateau
+
+    Returns an array of Optim.optimize structs
+"""
 function find_peaks(f::Function; grid_points::Int = 1000, search_method = Brent())
     grid = range(0.0, 1.0, length=grid_points)
     outputs = f.(grid)
@@ -175,10 +185,20 @@ function find_peaks(f::Function; grid_points::Int = 1000, search_method = Brent(
     return results
 end
 
+"""
+Global optimiser with PeakSearch
+Finds all peaks in the inerval [0,1] and chooses the highest
+
+f - one dimensional and over the domain [0, 1]
+grid_point - int determining density of grid. Higher denisty -> greater accuracy but more expensive
+search_method - can take either Brent() or GoldenSection() 
+
+returns n Optim.optimizer struct
+"""
 function global_solution(::PeakSearch, f:: Function ; grid_points:: Int = 1000,  search_method = Brent())
     results = find_peaks(f; grid_points = grid_points, search_method = search_method)
 
-    results_minimums = Optim.minimum.(results)
+    results_minimums = Optim.minimum.(results) # use minimum here since results are from -f
     return results[argmin(results_minimums)]
 end
 
