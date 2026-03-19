@@ -136,24 +136,27 @@ search_method - can take either Brent() or GoldenSection()
 
 returns an Optim.optimizer struct
 """
-function global_solution(::GridSearch, f:: Function ; grid_points:: Int = 1000,  search_method = Brent()) # note kwargs allow flexibility
-
-    # step 1 - grid search to identift potential maxima -> h can be reused here
-    grid = (range(0.0, 1.0 , length =  grid_points))
-    # step 2 - broadcast the function over the grid to get output at each point
-    outputs = f.(grid)
-    #step 3 - grab position of max point
-    max_index = argmax(outputs)
-
-    # create indices to get the bracket for testing - use min and max to cover corner cases.
-    left_index = max(1, max_index - 1)
+function global_solution(::GridSearch, f::Function; grid_points::Int = 1000, search_method = Brent())
+    grid = range(0.0, 1.0, length=grid_points)
+    
+    max_val = f(grid[1]) # evaluate first point to setup max_val 
+    max_index = 1 # first point
+    
+    for i in 2:grid_points # in Julia looping actually gives better performance that f.(grid) due to memory efficiency
+        val = f(grid[i])
+        if val > max_val # only change point if it is highest seen
+            max_val = val 
+            max_index = i
+        end
+    end
+    #grab indices either side to form the search interval 
+    left_index = max(1, max_index - 1) # handles corner solutions
     right_index = min(grid_points, max_index + 1)
 
-    # step 4 - optimise using the negative of the function - Optim only minimises so we transform 
+    # optimise using the negative of the function - Optim only minimises so we transform 
     result = optimize(x -> -f(x), grid[left_index], grid[right_index], search_method)
 
     return result
-
 end
 
 #local points methods
@@ -161,7 +164,7 @@ end
 """
 Function to find all maximums of a function over the domain [0,1] as long as they don't plateau
 
-    Returns an array of Optim.optimize structs
+returns an array of Optim.optimize structs
 """
 function find_peaks(f::Function; grid_points::Int = 1000, search_method = Brent())
     grid = range(0.0, 1.0, length=grid_points)
@@ -205,4 +208,31 @@ end
 # default dispatch of global_solution when tag is excluded
 function global_solution(f:: Function ; grid_points:: Int = 1000,  search_method = Brent())
     return global_solution(GridSearch(), f ; grid_points = grid_points, search_method = search_method)
+end
+
+
+
+"""
+Old version of the grid search optimiser
+I thought vectorising the function would be slower but in Julia the memory overhead
+    actually makes it slower than looping so this function is simply a worse version
+"""
+function global_solution_depreciated(f:: Function ; grid_points:: Int = 1000,  search_method = Brent()) # note kwargs allow flexibility
+
+    # step 1 - grid search to identift potential maxima -> h can be reused here
+    grid = (range(0.0, 1.0 , length =  grid_points))
+    # step 2 - broadcast the function over the grid to get output at each point
+    outputs = f.(grid)
+    #step 3 - grab position of max point
+    max_index = argmax(outputs)
+
+    # create indices to get the bracket for testing - use min and max to cover corner cases.
+    left_index = max(1, max_index - 1)
+    right_index = min(grid_points, max_index + 1)
+
+    # step 4 - optimise using the negative of the function - Optim only minimises so we transform 
+    result = optimize(x -> -f(x), grid[left_index], grid[right_index], search_method)
+
+    return result
+
 end
