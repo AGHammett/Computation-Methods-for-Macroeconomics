@@ -1,6 +1,7 @@
-using Revise
 using Pkg
 Pkg.activate(".")
+
+using Revise
 
 includet("q1.jl")
 includet("q2.jl")

@@ -1,6 +1,5 @@
 using Plots
 using Optim
-using Roots
 
 u(c::Real, gamma:: Real)::Float64 = (c^(1 - gamma)) / (1 - gamma)
 
