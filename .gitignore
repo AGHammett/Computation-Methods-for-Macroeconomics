@@ -6,6 +6,8 @@
 *.dll
 *.exe
 *.log
+*.pdf
+*.png
 
 Manifest.toml
 JuliaManifest.toml
