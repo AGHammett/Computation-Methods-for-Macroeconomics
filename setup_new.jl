@@ -1,7 +1,8 @@
-using Revise
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
+
+using Revise
 
 includet("q1.jl")
 includet("q2.jl")
