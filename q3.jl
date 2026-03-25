@@ -7,26 +7,26 @@ using Optim
 function q3_a()
     
     println("Running three peak implementation...")
-    find_three_peaks(Z)
+    find_three_peaks(Z) # find_three_peaks will print results
     println("-----------------------------------------------------")
 
     println("Running peak search implementation...")
-    results = find_peaks(Z)
+    results = find_peaks(Z) # recover results from find_peaks
     z_star_max = -Inf
     h_star_max = 0
-    for (i, result) in enumerate(results)
+    for (i, result) in enumerate(results) # loop through to identify the global maximiser
         h_star = Optim.minimizer(result)
         z_star = -Optim.minimum(result)
-        
+        # print details of each peak 
         println("Peak $i")
         println("H*: $h_star")
         println("Z*: $z_star")
-        if z_star > z_star_max
+        if z_star > z_star_max # if higher z value that existing it's a candidate for global max
             h_star_max = h_star
             z_star_max = z_star
         end
     end
-    println("Max H*: $h_star_max")
+    println("Max H*: $h_star_max") # print final resutls for global solution
     println("Max Z*: $z_star_max")
 
 end
@@ -34,7 +34,7 @@ end
 function q3_b(M:: Int = 100)
 
     println("Part 1 - evalutating h at m = 2 & m = 3:")
-    h_2 = h(Z, 2)
+    h_2 = h(Z, 2) # simpy call function to get its value
     h_3 = h(Z, 3)
     println("h(2): $h_2")
     println("h(3): $h_3")
@@ -45,7 +45,7 @@ function q3_b(M:: Int = 100)
      h_m_array = [h(Z, m) for m in m_range] # f can be any function that satisfies h
 
     p = plot(m_range, h_m_array, label = "h(m)") 
-    hline!(p, [0.90005], label = "True Global Solution")
+    hline!(p, [0.90005], label = "True Global Solution") # show the true max on the plot
     display(p)
     savefig(p, "m1000.pdf")
     return p
@@ -54,8 +54,9 @@ end
 
 function q3_c(f:: Function; grid_points = 1000)
 
+    #simply call the functions below and print their outputs
     println("Optimising input function using Grid Search...")
-    maximiser = global_solution(GridSearch(), f ; grid_points = grid_points)
+    maximiser = global_solution(GridSearch(), f ; grid_points = grid_points) 
     println("Global solution found by grid search: $maximiser")
 
     println("-----------------------------------------------------")
@@ -132,7 +133,7 @@ end
 Function to find the 3 local maxima of Z and the global max.
 Elementary method of taking three subsets of the domain and optimising seperatly - by observing the graph it's obvious which value will work
 """
-function find_three_peaks(f:: Function)
+function find_three_peaks(f:: Function)::Nothing
 
     # elementary function to find the three points based off a look at the graph. Gives correct result but isn't elegant at all
 
@@ -278,7 +279,7 @@ function global_solution(::PeakSearch, f:: Function ; grid_points:: Int = 1000, 
     results = find_peaks(f; grid_points = grid_points, search_method = search_method)
 
     results_minimums = Optim.minimum.(results) # use minimum here since results are from -f
-    maximiser = Optim.minimizer(results[argmin(results_minimums)])
+    maximiser = Optim.minimizer(results[argmin(results_minimums)]) # retrieve the minimiser located at the argmin
     # now must check against the ends for corner solutions
     for i in (0.0, 1.0)
         if f(i) > f(maximiser)

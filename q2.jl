@@ -1,17 +1,18 @@
 using Plots
 using Optim
 
-U(c:: Real, gamma:: Real) = (c ^ (1 - gamma)) / (1 - gamma)
+U(c:: Real, gamma:: Real) = (c ^ (1 - gamma)) / (1 - gamma) # utility from consumption
+ 
+V(h:: Real, sigma:: Real, T::Real) = ((T - h) ^ (1 - 1 / sigma)) / (1 - 1 / sigma) # utility from leiser
 
-V(h:: Real, sigma:: Real, T::Real) = ((T - h) ^ (1 - 1 / sigma)) / (1 - 1 / sigma)
+W(h:: Real, x:: Real, epsilon:: Real, alpha:: Real) = alpha * ((1 + max(0, h - x)) ^ epsilon - 1) # exhaustion penalty
 
-W(h:: Real, x:: Real, epsilon:: Real, alpha:: Real) = alpha * ((1 + max(0, h - x)) ^ epsilon - 1)
+con(w:: Real, h::Real, a::Real) = w * h + a # consumption
 
-con(w:: Real, h::Real, a::Real) = w * h + a 
+Z(w, h, a, gamma, sigma, T, x, epsilon, alpha) = U(con(w, h, a), gamma) + V(h, sigma, T) - W(h, x, epsilon, alpha) # total utilitiy
 
-Z(w, h, a, gamma, sigma, T, x, epsilon, alpha) = U(con(w, h, a), gamma) + V(h, sigma, T) - W(h, x, epsilon, alpha)
 
-function plot_utility_variation(;
+function plot_utility_variation(; # here default values are picked so the plot illustrates the kinked utility well
     param::Symbol,
     values,
     w = 10.0,
@@ -22,7 +23,7 @@ function plot_utility_variation(;
     x = 8.0,
     epsilon = 1.0,
     alpha = 0.2,
-    h_grid = range(0, 12, length = 500),
+    h_grid = range(0, 12, length = 500), # easier to visualise over 12 hours
     h_eval = 10.0,
     y_lims = (16, 20.5)
 )

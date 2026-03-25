@@ -175,7 +175,7 @@ function that starts at a grid of 1000 and decreases resolution to see when opti
 Test using both Brent and GoldenSearch for completion but it is technically redunadnat as failure
     arises due to grid inaccuracy -> this shows both methods give the same result
 """
-function test_ngrid_accuracy(;tolerance = 1.0e-3)
+function test_ngrid_accuracy(;algorithm::GlobalSolutionAlgorithm = GridSearch(), tolerance = 1.0e-3)
 
     grid_points = 1000 # start at 1000 since I know this passes all tests
 
@@ -189,14 +189,14 @@ function test_ngrid_accuracy(;tolerance = 1.0e-3)
             
             # while the test isn't part of the failed dictionary try it. if not it will skip
             if !haskey(failed_b, name)
-                result_b = global_solution(f, grid_points = grid_points)
+                result_b = global_solution(algorithm, f, grid_points = grid_points)
                 if abs(result_b - target) > tolerance # only add once out of tolerance
                     failed_b[name] = grid_points
                 end
             end
             #same logic but for goldensearch
             if !haskey(failed_g, name)
-                result_g = global_solution(f, grid_points = grid_points, search_method = GoldenSection())
+                result_g = global_solution(algorithm, f, grid_points = grid_points, search_method = GoldenSection())
                 if abs(result_g - target) > tolerance
                     failed_g[name] = grid_points
                 end
